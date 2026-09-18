@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lyrics Viewer</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>🎵 Lyrics Viewer</h1>
+      <button id="themeToggle" class="icon-btn" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>Favorite Artists</h2>
+          <form id="addArtistForm" class="add-artist-form">
+            <input id="artistInput" type="text" placeholder="Add an artist…" autocomplete="off" required />
+            <button type="submit">Add</button>
+          </form>
+          <ul id="artistList" class="artist-list"></ul>
+        </section>
+      </aside>
+
+      <main class="main">
+        <section class="panel search-panel">
+          <h2 id="songsHeading">Songs</h2>
+          <div id="songsStatus" class="status"></div>
+          <ul id="songList" class="song-list"></ul>
+        </section>
+
+        <section class="panel lyrics-panel">
+          <div id="lyricsHeader" class="lyrics-header"></div>
+          <div id="lyricsStatus" class="status"></div>
+          <pre id="lyricsBody" class="lyrics-body"></pre>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
