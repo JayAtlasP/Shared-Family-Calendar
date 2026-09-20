@@ -17,6 +17,8 @@ const els = {
   addArtistForm: document.getElementById("addArtistForm"),
   artistInput: document.getElementById("artistInput"),
   artistList: document.getElementById("artistList"),
+  songSearchForm: document.getElementById("songSearchForm"),
+  songSearchInput: document.getElementById("songSearchInput"),
   songsHeading: document.getElementById("songsHeading"),
   songsStatus: document.getElementById("songsStatus"),
   songList: document.getElementById("songList"),
@@ -28,6 +30,7 @@ const els = {
 initTheme();
 renderArtists();
 els.addArtistForm.addEventListener("submit", onAddArtist);
+els.songSearchForm.addEventListener("submit", onSongSearch);
 els.themeToggle.addEventListener("click", toggleTheme);
 
 if (state.artists.length) {
@@ -141,12 +144,13 @@ async function selectArtist(name) {
   state.activeSong = null;
   renderArtists();
   renderLyricsPlaceholder();
+  els.songSearchInput.value = "";
   els.songsHeading.textContent = `Songs — ${name}`;
   els.songList.innerHTML = "";
   setStatus(els.songsStatus, "Loading songs…");
 
   try {
-    const songs = await fetchTopSongs(name);
+    const songs = await fetchSongs(name, "artistTerm");
     state.songs = songs;
     if (!songs.length) {
       setStatus(els.songsStatus, "No songs found for this artist.", true);
@@ -159,10 +163,37 @@ async function selectArtist(name) {
   }
 }
 
-async function fetchTopSongs(artist) {
+async function onSongSearch(event) {
+  event.preventDefault();
+  const term = els.songSearchInput.value.trim();
+  if (!term) return;
+
+  state.activeArtist = null;
+  state.activeSong = null;
+  renderArtists();
+  renderLyricsPlaceholder();
+  els.songsHeading.textContent = `Songs — "${term}"`;
+  els.songList.innerHTML = "";
+  setStatus(els.songsStatus, "Searching songs…");
+
+  try {
+    const songs = await fetchSongs(term, "songTerm");
+    state.songs = songs;
+    if (!songs.length) {
+      setStatus(els.songsStatus, "No songs found for that search.", true);
+    } else {
+      setStatus(els.songsStatus, "");
+    }
+    renderSongs();
+  } catch (err) {
+    setStatus(els.songsStatus, "Couldn't search songs. Try again later.", true);
+  }
+}
+
+async function fetchSongs(term, attribute) {
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(
-    artist
-  )}&entity=song&attribute=artistTerm&limit=25`;
+    term
+  )}&entity=song&attribute=${attribute}&limit=25`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("iTunes lookup failed");
   const data = await res.json();
@@ -198,7 +229,7 @@ function renderSongs() {
 
     const album = document.createElement("span");
     album.className = "track-album";
-    album.textContent = song.album || "";
+    album.textContent = [song.artist, song.album].filter(Boolean).join(" · ");
 
     li.appendChild(title);
     li.appendChild(album);

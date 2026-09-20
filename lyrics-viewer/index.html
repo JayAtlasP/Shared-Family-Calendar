@@ -27,6 +27,10 @@
 
       <main class="main">
         <section class="panel search-panel">
+          <form id="songSearchForm" class="song-search-form">
+            <input id="songSearchInput" type="text" placeholder="Search for a song…" autocomplete="off" required />
+            <button type="submit">Search</button>
+          </form>
           <h2 id="songsHeading">Songs</h2>
           <div id="songsStatus" class="status"></div>
           <ul id="songList" class="song-list"></ul>
