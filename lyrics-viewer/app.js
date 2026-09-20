@@ -225,7 +225,9 @@ async function selectSong(song) {
   setStatus(els.lyricsStatus, "Loading lyrics…");
 
   try {
-    const lyrics = await fetchLyrics(song.artist, song.title);
+    const lyrics =
+      (await fetchLyricsOvh(song.artist, song.title)) ||
+      (await fetchLyricsLrclib(song.artist, song.title));
     if (!lyrics) {
       setStatus(els.lyricsStatus, "Lyrics not found for this track.", true);
     } else {
@@ -237,14 +239,41 @@ async function selectSong(song) {
   }
 }
 
-async function fetchLyrics(artist, title) {
-  const url = `https://api.lyrics.ovh/v1/${encodeURIComponent(
-    artist
-  )}/${encodeURIComponent(title)}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.lyrics ? data.lyrics.trim() : null;
+async function fetchLyricsOvh(artist, title) {
+  try {
+    const url = `https://api.lyrics.ovh/v1/${encodeURIComponent(
+      artist
+    )}/${encodeURIComponent(title)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.lyrics ? data.lyrics.trim() : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// lyrics.ovh has thin coverage for Mandopop/Cantopop; lrclib.net's
+// crowd-sourced catalog (built for karaoke/LRC apps) fills that gap.
+async function fetchLyricsLrclib(artist, title) {
+  try {
+    const url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(
+      title
+    )}&artist_name=${encodeURIComponent(artist)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const results = await res.json();
+    if (!Array.isArray(results) || !results.length) return null;
+    const match =
+      results.find((r) => r.plainLyrics) || results.find((r) => r.syncedLyrics);
+    if (!match) return null;
+    if (match.plainLyrics) return match.plainLyrics.trim();
+    return match.syncedLyrics
+      .replace(/^\[[\d:.]+\]\s*/gm, "")
+      .trim();
+  } catch (err) {
+    return null;
+  }
 }
 
 function renderLyricsPlaceholder() {
